@@ -1,4 +1,5 @@
-﻿using IdentityServer4.Test;
+﻿using IdentityServer4.Models;
+using IdentityServer4.Test;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +39,21 @@ namespace Marvin.IDP
                     }
                 }
             };
+        }
+
+        // scopes
+        public static IEnumerable<IdentityResource> GetIdentityResources()
+        {
+            return new List<IdentityResource>
+            {
+                new IdentityResources.OpenId(), // SubjectId above, openid minimum requirement
+                new IdentityResources.Profile() // Claims given_name and family_name
+            };
+        }
+
+        public static IEnumerable<Client> GetClients()
+        {
+            return new List<Client>();
         }
     }
 }
