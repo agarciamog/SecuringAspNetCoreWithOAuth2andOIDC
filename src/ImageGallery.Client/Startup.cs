@@ -1,32 +1,32 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using ImageGallery.Client.Services;
 
 namespace ImageGallery.Client
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        public Startup(IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
-                .AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = configuration;
         }
 
-        public IConfigurationRoot Configuration { get; }
+        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddMvc();
+            services.AddMvc(options => options.EnableEndpointRouting = false);
 
             // register an IHttpContextAccessor so we can access the current
             // HttpContext in services by injecting it
@@ -34,14 +34,36 @@ namespace ImageGallery.Client
 
             // register an IImageGalleryHttpClient
             services.AddScoped<IImageGalleryHttpClient, ImageGalleryHttpClient>();
+
+            // This configuration allows for the flow to be automated.
+            // configure authentication middleware on client side application
+            // Use Authentication
+            // Use/save tokens to encrypted cookies
+            // Use IDP server authentication
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "Cookies";
+                options.DefaultChallengeScheme = "oidc";
+            }).AddCookie("Cookies")
+            .AddOpenIdConnect("oidc", options =>
+            {
+                options.SignInScheme = "Cookies";
+                options.Authority = "https://localhost:44347/"; // idp
+                options.ClientId = "imagegalleryclient";
+                options.ResponseType = "code id_token"; // hybrid flow
+                // options.CallbackPath = new PathString("...") // using default redirect/callback at https://[host]/signin-oidc
+                // options.SignoutCallbackPath = new PathString("..."); // using default -> https://[host]/signout-callback-oidc
+                options.Scope.Add("openid");    // required by openid
+                options.Scope.Add("profile");
+                options.SaveTokens = true;
+                options.ClientSecret = "secret";
+                options.GetClaimsFromUserInfoEndpoint = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -51,7 +73,11 @@ namespace ImageGallery.Client
             {
                 app.UseExceptionHandler("/Shared/Error");
             }
-            
+
+            // It's important that this is before UseMvc, because we want it blocked
+            // for unauthenticated users.
+            app.UseAuthentication();
+
             app.UseStaticFiles();
 
             app.UseMvc(routes =>

@@ -1,4 +1,5 @@
-﻿using IdentityServer4.Models;
+﻿using IdentityServer4;
+using IdentityServer4.Models;
 using IdentityServer4.Test;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace Marvin.IDP
             };
         }
 
-        // scopes
+        // returns scope
         public static IEnumerable<IdentityResource> GetIdentityResources()
         {
             return new List<IdentityResource>
@@ -53,7 +54,32 @@ namespace Marvin.IDP
 
         public static IEnumerable<Client> GetClients()
         {
-            return new List<Client>();
+            return new List<Client>()
+            {
+                new Client()
+                {
+                    ClientName = "Image Gallery",
+                    ClientId = "imagegalleryclient",
+                    AllowedGrantTypes = GrantTypes.Hybrid,
+                    RedirectUris = new List<string>()
+                    {
+                        "https://localhost:44301/signin-oidc" // tokens delivered to browser via redirection
+                    },
+                    PostLogoutRedirectUris =
+                    {
+                        "https://localhost:44301/signout-callback-oidc"
+                    },
+                    AllowedScopes =
+                    {
+                        IdentityServerConstants.StandardScopes.OpenId,
+                        IdentityServerConstants.StandardScopes.Profile
+                    },
+                    ClientSecrets =
+                    {
+                        new Secret("secret".Sha256())
+                    }
+                }
+            };
         }
     }
 }

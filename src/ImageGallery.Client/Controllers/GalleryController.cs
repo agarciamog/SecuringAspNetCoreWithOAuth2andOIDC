@@ -10,9 +10,13 @@ using ImageGallery.Model;
 using System.Net.Http;
 using System.IO;
 using ImageGallery.Client.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using System.Diagnostics;
 
 namespace ImageGallery.Client.Controllers
 {
+    [Authorize]
     public class GalleryController : Controller
     {
         private readonly IImageGalleryHttpClient _imageGalleryHttpClient;
@@ -24,6 +28,8 @@ namespace ImageGallery.Client.Controllers
 
         public async Task<IActionResult> Index()
         {
+            await WriteOutIdentityInformation();
+
             // call the API
             var httpClient = await _imageGalleryHttpClient.GetClient(); 
 
@@ -161,6 +167,28 @@ namespace ImageGallery.Client.Controllers
             }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
-        }               
+        }
+        
+        public async Task WriteOutIdentityInformation()
+        {
+            // get the saved identity token
+            var identityToken = await HttpContext
+                .GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+
+            Debug.WriteLine($"Identity token: {identityToken}");
+
+            // write out the user claims
+            foreach(var claim in User.Claims)
+            {
+                Debug.WriteLine($"Claim type: {claim.Type} - Claim value: {claim.Value}");
+            }
+        }
+
+        public async Task Logout()
+        {
+            // Clears the local cookie, "Cookies" must match name from scheme in startup.cs
+            await HttpContext.SignOutAsync("Cookies"); // sign out of site
+            await HttpContext.SignOutAsync("oidc"); // sign out of idp server
+        }
     }
 }

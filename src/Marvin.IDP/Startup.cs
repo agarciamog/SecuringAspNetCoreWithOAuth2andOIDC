@@ -18,6 +18,7 @@ namespace Marvin.IDP
         {
             services.AddMvc(option => option.EnableEndpointRouting = false);
 
+            // Configure IdentityServer with TestUsers, Claims/Scope and Client List
             services.AddIdentityServer()
                 .AddDeveloperSigningCredential()
                 .AddTestUsers(Config.GetUsers())
@@ -33,6 +34,7 @@ namespace Marvin.IDP
                 app.UseDeveloperExceptionPage();
             }
 
+            // Add IdentityServer to middleware pipeline
             app.UseIdentityServer();
             app.UseStaticFiles();
             app.UseMvcWithDefaultRoute();
