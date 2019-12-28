@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using ImageGallery.Client.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
+using IdentityModel;
 
 namespace ImageGallery.Client
 {
@@ -50,7 +51,11 @@ namespace ImageGallery.Client
             {
                 options.DefaultScheme = "Cookies";
                 options.DefaultChallengeScheme = "oidc";
-            }).AddCookie("Cookies")
+            })
+            .AddCookie("Cookies", options =>
+            {
+                options.AccessDeniedPath = "/Authorization/AccessDenied";
+            })
             .AddOpenIdConnect("oidc", options =>
             {
                 options.SignInScheme = "Cookies";
@@ -62,6 +67,7 @@ namespace ImageGallery.Client
                 options.Scope.Add("openid");    // required by openid
                 options.Scope.Add("profile");
                 options.Scope.Add("address");
+                options.Scope.Add("roles");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
                 options.GetClaimsFromUserInfoEndpoint = true;
@@ -70,7 +76,14 @@ namespace ImageGallery.Client
                 options.ClaimActions.DeleteClaim("idp");
                 options.ClaimActions.DeleteClaim("s_hash");
                 //options.ClaimActions.DeleteClaim("address"); // don't include in cookie, but not necessary
-                                                               // since middleware does not map to our cliam identity
+                // since middleware does not map to our cliam identity
+                options.ClaimActions.MapJsonKey("role", "role"); // adds to claim set mapping
+                // https://github.com/aspnet/Security/blob/master/src/Microsoft.AspNetCore.Authentication.OpenIdConnect/OpenIdConnectOptions.cs
+
+                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    RoleClaimType = "role"
+                };
             });
         }
 

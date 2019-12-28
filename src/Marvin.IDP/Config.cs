@@ -25,7 +25,8 @@ namespace Marvin.IDP
                     {
                         new Claim("given_name", "Frank"),
                         new Claim("family_name", "Underwood"),
-                        new Claim("address", "1 Main St")
+                        new Claim("address", "1 Main St"),
+                        new Claim("role", "freeUser")
                     }
                 },
                 new TestUser
@@ -38,7 +39,8 @@ namespace Marvin.IDP
                     {
                         new Claim("given_name", "Claire"),
                         new Claim("family_name", "Underwood"),
-                        new Claim("address", "36 University St")
+                        new Claim("address", "36 University St"),
+                        new Claim("role", "payingUser")
                     }
                 }
             };
@@ -51,7 +53,12 @@ namespace Marvin.IDP
             {
                 new IdentityResources.OpenId(), // SubjectId above, openid minimum requirement
                 new IdentityResources.Profile(), // Claims given_name and family_name
-                new IdentityResources.Address()
+                new IdentityResources.Address(),
+                new IdentityResource(
+                    "roles",                        // name of the resource
+                    "Your role(s)",                 // display name
+                    new List<string>() { "role" })  // List of claims that must be returned when
+                                                    // asking for the roles resource.
             };
         }
 
@@ -76,7 +83,8 @@ namespace Marvin.IDP
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
-                        IdentityServerConstants.StandardScopes.Address
+                        IdentityServerConstants.StandardScopes.Address,
+                        "roles"
                     },
                     ClientSecrets =
                     {
