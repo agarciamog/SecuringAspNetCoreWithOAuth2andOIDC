@@ -39,6 +39,7 @@ namespace ImageGallery.Client
 
             // register an IImageGalleryHttpClient
             services.AddScoped<IImageGalleryHttpClient, ImageGalleryHttpClient>();
+            services.AddScoped<IDiscoveryClient, DiscoveryClient>();
 
             // This configuration allows for the flow to be automated.
             // configure authentication middleware on client side application
@@ -60,13 +61,16 @@ namespace ImageGallery.Client
                 // options.SignoutCallbackPath = new PathString("..."); // using default -> https://[host]/signout-callback-oidc
                 options.Scope.Add("openid");    // required by openid
                 options.Scope.Add("profile");
+                options.Scope.Add("address");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
                 options.GetClaimsFromUserInfoEndpoint = true;
-                options.ClaimActions.Remove("amr"); // remove filter for access method/amr
-                options.ClaimActions.DeleteClaim("sid");
+                options.ClaimActions.Remove("amr"); // remove dictionary mapping for readability
+                options.ClaimActions.DeleteClaim("sid"); // delete claim from cookie, reduce size.
                 options.ClaimActions.DeleteClaim("idp");
                 options.ClaimActions.DeleteClaim("s_hash");
+                //options.ClaimActions.DeleteClaim("address"); // don't include in cookie, but not necessary
+                                                               // since middleware does not map to our cliam identity
             });
         }
 

@@ -24,7 +24,8 @@ namespace Marvin.IDP
                     Claims = new List<Claim>
                     {
                         new Claim("given_name", "Frank"),
-                        new Claim("family_name", "Underwood")
+                        new Claim("family_name", "Underwood"),
+                        new Claim("address", "1 Main St")
                     }
                 },
                 new TestUser
@@ -36,7 +37,8 @@ namespace Marvin.IDP
                     Claims = new List<Claim>
                     {
                         new Claim("given_name", "Claire"),
-                        new Claim("family_name", "Underwood")
+                        new Claim("family_name", "Underwood"),
+                        new Claim("address", "36 University St")
                     }
                 }
             };
@@ -48,7 +50,8 @@ namespace Marvin.IDP
             return new List<IdentityResource>
             {
                 new IdentityResources.OpenId(), // SubjectId above, openid minimum requirement
-                new IdentityResources.Profile() // Claims given_name and family_name
+                new IdentityResources.Profile(), // Claims given_name and family_name
+                new IdentityResources.Address()
             };
         }
 
@@ -69,10 +72,11 @@ namespace Marvin.IDP
                     {
                         "https://localhost:44301/signout-callback-oidc"
                     },
-                    AllowedScopes =
+                    AllowedScopes =     // resources client has access to
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
-                        IdentityServerConstants.StandardScopes.Profile
+                        IdentityServerConstants.StandardScopes.Profile,
+                        IdentityServerConstants.StandardScopes.Address
                     },
                     ClientSecrets =
                     {

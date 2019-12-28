@@ -13,6 +13,7 @@ using ImageGallery.Client.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Diagnostics;
+using IdentityModel.Client;
 
 namespace ImageGallery.Client.Controllers
 {
@@ -20,10 +21,13 @@ namespace ImageGallery.Client.Controllers
     public class GalleryController : Controller
     {
         private readonly IImageGalleryHttpClient _imageGalleryHttpClient;
+        private readonly IDiscoveryClient _discoveryClient;
 
-        public GalleryController(IImageGalleryHttpClient imageGalleryHttpClient)
+        public GalleryController(IImageGalleryHttpClient imageGalleryHttpClient,
+            IDiscoveryClient discoveryClient)
         {
             _imageGalleryHttpClient = imageGalleryHttpClient;
+            _discoveryClient = discoveryClient;
         }
 
         public async Task<IActionResult> Index()
@@ -167,6 +171,37 @@ namespace ImageGallery.Client.Controllers
             }
 
             throw new Exception($"A problem happened while calling the API: {response.ReasonPhrase}");
+        }
+
+        public async Task<IActionResult> OrderFrame()
+        {
+            // using nuget package IdentityModel, it's made by IdentityServer4 people,
+            // to get information using the endpoints defined in
+            // idphost/.well-known/openid-configuration. In this case
+            // we'll use it to get userinfo.
+
+            var client = _discoveryClient.GetDiscoveryClient();
+
+            var discoMetaData = await client.GetDiscoveryDocumentAsync();
+
+            var accessToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken)
+                .ConfigureAwait(false);
+
+            var userInfo = await client.GetUserInfoAsync(new UserInfoRequest
+            {
+                Address = discoMetaData.UserInfoEndpoint,
+                Token = accessToken
+            }).ConfigureAwait(false);
+
+
+            if (userInfo.IsError)
+            {
+                throw new Exception("Problem accessing the UserInfo endpoint.",
+                            userInfo.Exception);
+            }
+
+            var address = userInfo.Claims.FirstOrDefault(c => c.Type == "address")?.Value;
+            return View(new OrderFrameViewModel(address));
         }
         
         public async Task WriteOutIdentityInformation()
