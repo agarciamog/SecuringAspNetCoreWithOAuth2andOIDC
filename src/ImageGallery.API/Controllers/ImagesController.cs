@@ -13,6 +13,7 @@ using System.Linq;
 namespace ImageGallery.API.Controllers
 {
     [Route("api/images")]
+    [Authorize]
     public class ImagesController : Controller
     {
         private readonly IGalleryRepository _galleryRepository;
@@ -28,8 +29,10 @@ namespace ImageGallery.API.Controllers
         [HttpGet()]
         public IActionResult GetImages()
         {
+            var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value; // sub is owner
+
             // get from repo
-            var imagesFromRepo = _galleryRepository.GetImages();
+            var imagesFromRepo = _galleryRepository.GetImages(ownerId);
 
             // map to model
             var imagesToReturn = Mapper.Map<IEnumerable<Model.Image>>(imagesFromRepo);
@@ -53,7 +56,9 @@ namespace ImageGallery.API.Controllers
             return Ok(imageToReturn);
         }
 
+        // The role from the access_token will mapped User.Claims.
         [HttpPost()]
+        [Authorize(Roles = "PayingUser")]
         public IActionResult CreateImage([FromBody] ImageForCreation imageForCreation)
         {
             if (imageForCreation == null)
@@ -64,7 +69,7 @@ namespace ImageGallery.API.Controllers
             if (!ModelState.IsValid)
             {
                 // return 422 - Unprocessable Entity when validation fails
-                return new UnprocessableEntityObjectResult(ModelState);
+                return new Helpers.UnprocessableEntityObjectResult(ModelState);
             }
 
             // Automapper maps only the Title in our configuration
@@ -88,6 +93,10 @@ namespace ImageGallery.API.Controllers
 
             // fill out the filename
             imageEntity.FileName = fileName;
+
+            // set the ownderId on the imageEntity
+            var ownerId = User.Claims.FirstOrDefault(c => c.Type == "sub").Value;
+            imageEntity.OwnerId = ownerId;
 
             // add and save.  
             _galleryRepository.AddImage(imageEntity);
@@ -136,7 +145,7 @@ namespace ImageGallery.API.Controllers
             if (!ModelState.IsValid)
             {
                 // return 422 - Unprocessable Entity when validation fails
-                return new UnprocessableEntityObjectResult(ModelState);
+                return new Helpers.UnprocessableEntityObjectResult(ModelState);
             }
 
             var imageFromRepo = _galleryRepository.GetImage(id);

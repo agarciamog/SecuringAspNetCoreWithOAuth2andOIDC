@@ -19,7 +19,7 @@ namespace ImageGallery.Client.Services
 
         public HttpClient GetDiscoveryClient()
         {
-            client.BaseAddress = new Uri("https://localhost:44347/");
+            client.BaseAddress = new Uri("https://localhost:44347/"); // IDP
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));

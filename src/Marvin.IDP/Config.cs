@@ -26,7 +26,7 @@ namespace Marvin.IDP
                         new Claim("given_name", "Frank"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "1 Main St"),
-                        new Claim("role", "freeUser")
+                        new Claim("role", "FreeUser")
                     }
                 },
                 new TestUser
@@ -40,7 +40,7 @@ namespace Marvin.IDP
                         new Claim("given_name", "Claire"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "36 University St"),
-                        new Claim("role", "payingUser")
+                        new Claim("role", "PayingUser")
                     }
                 }
             };
@@ -59,6 +59,16 @@ namespace Marvin.IDP
                     "Your role(s)",                 // display name
                     new List<string>() { "role" })  // List of claims that must be returned when
                                                     // asking for the roles resource.
+            };
+        }
+
+        public static IEnumerable<ApiResource> GetApiResources()
+        {
+            return new List<ApiResource>
+            {
+                new ApiResource("imagegalleryapi", "Image Gallery API", 
+                                    new List<string> { "role" })    // api needs role in access token
+                                                                    // so we add it in our IDP config
             };
         }
 
@@ -84,7 +94,8 @@ namespace Marvin.IDP
                         IdentityServerConstants.StandardScopes.OpenId,
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Address,
-                        "roles"
+                        "roles",
+                        "imagegalleryapi"
                     },
                     ClientSecrets =
                     {
