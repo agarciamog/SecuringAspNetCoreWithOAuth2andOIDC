@@ -42,6 +42,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpGet("{id}", Name = "GetImage")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult GetImage(Guid id)
         {
             var imageFromRepo = _galleryRepository.GetImage(id);
@@ -114,6 +115,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult DeleteImage(Guid id)
         {
             var imageFromRepo = _galleryRepository.GetImage(id);
@@ -134,6 +136,7 @@ namespace ImageGallery.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Policy = "MustOwnImage")]
         public IActionResult UpdateImage(Guid id, 
             [FromBody] ImageForUpdate imageForUpdate)
         {           
@@ -165,5 +168,5 @@ namespace ImageGallery.API.Controllers
 
             return NoContent();
         }
-    }
+    } // https://localhost:44325/images/43de8b65-8b19-4b87-ae3c-df97e18bd461
 }

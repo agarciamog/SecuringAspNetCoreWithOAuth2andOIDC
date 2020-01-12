@@ -13,6 +13,7 @@ using ImageGallery.Client.Services;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using IdentityModel;
+using Microsoft.IdentityModel.Tokens;
 
 namespace ImageGallery.Client
 {
@@ -33,6 +34,19 @@ namespace ImageGallery.Client
         {
             // Add framework services.
             services.AddMvc(options => options.EnableEndpointRouting = false);
+
+            // Configure policies
+            services.AddAuthorization(authorizationOptions =>
+            {
+                authorizationOptions.AddPolicy(
+                    "CanOrderFrame",
+                    policyBuilder =>
+                    {
+                        policyBuilder.RequireAuthenticatedUser();
+                        policyBuilder.RequireClaim("country", "mx");
+                        policyBuilder.RequireClaim("subscriptionlevel", "PayingUser");
+                    });
+            });
 
             // register an IHttpContextAccessor so we can access the current
             // HttpContext in services by injecting it
@@ -68,20 +82,27 @@ namespace ImageGallery.Client
                 options.Scope.Add("profile");
                 options.Scope.Add("address");
                 options.Scope.Add("roles");
+                options.Scope.Add("subscriptionlevel");
+                options.Scope.Add("country");
                 options.Scope.Add("imagegalleryapi");
                 options.SaveTokens = true;
                 options.ClientSecret = "secret";
                 options.GetClaimsFromUserInfoEndpoint = true;
-                options.ClaimActions.Remove("amr"); // remove dictionary mapping for readability
-                options.ClaimActions.DeleteClaim("sid"); // delete claim from cookie, reduce size.
+                                                                    // https://stackoverflow.com/questions/57860625/difference-between-claimactions-remove-and-claimactions-deleteclaim
+                options.ClaimActions.Remove("amr");                 // remove filtering from dictionary for readability and map to
+                                                                    // User.Claims
+                options.ClaimActions.DeleteClaim("sid");            // delete claim from User.Claims, keeps cookie smaller too
                 options.ClaimActions.DeleteClaim("idp");
                 options.ClaimActions.DeleteClaim("s_hash");
-                //options.ClaimActions.DeleteClaim("address"); // don't include in cookie, but not necessary
-                // since middleware does not map to our cliam identity
-                options.ClaimActions.MapJsonKey("role", "role"); // adds to claim set mapping
-                // https://github.com/aspnet/Security/blob/master/src/Microsoft.AspNetCore.Authentication.OpenIdConnect/OpenIdConnectOptions.cs
+                //options.ClaimActions.DeleteClaim("address");      // don't include in cookie, but not necessary
+                                                                    // since middleware does not map to our cliam identity
+                options.ClaimActions.MapJsonKey("role", "role");    // maps claim to User.Claims
+                                                                    // https://github.com/aspnet/Security/blob/master/src/Microsoft.AspNetCore.Authentication.OpenIdConnect/OpenIdConnectOptions.cs
 
-                options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                options.ClaimActions.MapJsonKey("subscriptionlevel", "subscriptionlevel");
+                options.ClaimActions.MapJsonKey("country", "country");
+
+                options.TokenValidationParameters = new TokenValidationParameters
                 {
                     RoleClaimType = "role"
                 };

@@ -13,5 +13,6 @@ namespace ImageGallery.API.Services
         void UpdateImage(Image image);
         void DeleteImage(Image image);
         bool Save();
+        bool IsImageOwner(string ownerId, Guid imageId);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ImageGallery.API.Entities;
 using ImageGallery.API.Services;
+using ImageGallery.API.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 //using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ImageGallery.API
@@ -34,10 +36,25 @@ namespace ImageGallery.API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc(options => options.EnableEndpointRouting = false);
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(
+                    "MustOwnImage",
+                    policyBuilder =>
+                    {
+                        policyBuilder.RequireAuthenticatedUser();
+                        policyBuilder.AddRequirements(new MustOwnImageRequirement());
+
+                    });
+            });
+
+            services.AddScoped<IAuthorizationHandler, MustOwnImageHandler>();
+
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(options => 
                 {
-                    options.Authority = "https://localhost:44347/";
+                    options.Authority = "https://localhost:44347/"; // IDP
                     options.ApiName = "imagegalleryapi";
                 });
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

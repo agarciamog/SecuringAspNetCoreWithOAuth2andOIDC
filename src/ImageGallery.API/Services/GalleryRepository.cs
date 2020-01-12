@@ -72,6 +72,11 @@ namespace ImageGallery.API.Services
                 }
 
             }
-        }     
+        }
+
+        public bool IsImageOwner(string ownerId, Guid imageId)
+        {
+            return _context.Images.Any(i => i.OwnerId == ownerId && i.Id == imageId);
+        }
     }
 }

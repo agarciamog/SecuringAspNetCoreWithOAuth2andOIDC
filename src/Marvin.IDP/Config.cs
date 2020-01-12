@@ -26,7 +26,10 @@ namespace Marvin.IDP
                         new Claim("given_name", "Frank"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "1 Main St"),
-                        new Claim("role", "FreeUser")
+                        new Claim("role", "FreeUser"),
+                        new Claim("subscriptionlevel", "FreeUser"),
+                        new Claim("country", "us")
+
                     }
                 },
                 new TestUser
@@ -40,7 +43,9 @@ namespace Marvin.IDP
                         new Claim("given_name", "Claire"),
                         new Claim("family_name", "Underwood"),
                         new Claim("address", "36 University St"),
-                        new Claim("role", "PayingUser")
+                        new Claim("role", "PayingUser"),
+                        new Claim("subscriptionlevel", "PayingUser"),
+                        new Claim("country", "mx")
                     }
                 }
             };
@@ -55,10 +60,18 @@ namespace Marvin.IDP
                 new IdentityResources.Profile(), // Claims given_name and family_name
                 new IdentityResources.Address(),
                 new IdentityResource(
-                    "roles",                        // name of the resource
-                    "Your role(s)",                 // display name
-                    new List<string>() { "role" })  // List of claims that must be returned when
-                                                    // asking for the roles resource.
+                    "roles",                         // name of the resource
+                    "Your role(s)",                  // display name
+                    new List<string>() { "role" }),  // List of claims that must be returned when
+                                                     // asking for the roles resource.
+                new IdentityResource(                   // ABAC
+                    "country",
+                    "The country your're living in.",
+                    new List<string>() { "country" }),
+                new IdentityResource(                   // ABAC
+                    "subscriptionlevel",
+                    "Your subscription level",
+                    new List<string>() { "subscriptionlevel" })
             };
         }
 
@@ -95,7 +108,9 @@ namespace Marvin.IDP
                         IdentityServerConstants.StandardScopes.Profile,
                         IdentityServerConstants.StandardScopes.Address,
                         "roles",
-                        "imagegalleryapi"
+                        "imagegalleryapi",
+                        "country",
+                        "subscriptionlevel"
                     },
                     ClientSecrets =
                     {
