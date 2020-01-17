@@ -214,7 +214,7 @@ namespace ImageGallery.Client.Controllers
         {
             // get the saved identity token
             var identityToken = await HttpContext
-                .GetTokenAsync(OpenIdConnectParameterNames.IdToken);
+                .GetTokenAsync(OpenIdConnectParameterNames.IdToken).ConfigureAwait(false);
 
             Debug.WriteLine($"Identity token: {identityToken}");
 
@@ -227,6 +227,30 @@ namespace ImageGallery.Client.Controllers
 
         public async Task Logout()
         {
+            var accessToken = await HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken)
+                                        .ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                var discoClient = _discoveryClient.GetDiscoveryClient(); // extension method from IdentityModel.Client
+                var disco = await discoClient.GetDiscoveryDocumentAsync().ConfigureAwait(false);
+
+                var revocClient = new HttpClient();
+                var result = await revocClient.RevokeTokenAsync(new TokenRevocationRequest
+                {
+                    Address = disco.RevocationEndpoint,
+                    ClientId = "imagegalleryclient",
+                    ClientSecret = "secret",
+                    Token = accessToken
+                }).ConfigureAwait(false);
+
+                if(result.IsError)
+                {
+                    throw new Exception("Problem while revoking access token.", result.Exception);
+                }
+            }
+            
+
             // Clears the local cookie, "Cookies" must match name from scheme in startup.cs
             await HttpContext.SignOutAsync("Cookies"); // sign out of site
             await HttpContext.SignOutAsync("oidc"); // sign out of idp server

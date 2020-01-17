@@ -56,6 +56,7 @@ namespace ImageGallery.API
                 {
                     options.Authority = "https://localhost:44347/"; // IDP
                     options.ApiName = "imagegalleryapi";
+                    options.ApiSecret = "apisecret";
                 });
             //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             //    .AddJwtBearer(options =>

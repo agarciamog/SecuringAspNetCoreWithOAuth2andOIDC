@@ -82,6 +82,9 @@ namespace Marvin.IDP
                 new ApiResource("imagegalleryapi", "Image Gallery API", 
                                     new List<string> { "role" })    // api needs role in access token
                                                                     // so we add it in our IDP config
+                {
+                    ApiSecrets = { new Secret("apisecret".Sha256())}
+                }
             };
         }
 
@@ -94,6 +97,7 @@ namespace Marvin.IDP
                     ClientName = "Image Gallery",
                     ClientId = "imagegalleryclient",
                     AllowedGrantTypes = GrantTypes.Hybrid,
+                    AccessTokenType = AccessTokenType.Reference,
                     //IdentityTokenLifetime = // default 300 seconds
                     //AuthorizationCodeLifetime = // default 300 seconds
                     AccessTokenLifetime = 120,
