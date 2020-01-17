@@ -94,6 +94,13 @@ namespace Marvin.IDP
                     ClientName = "Image Gallery",
                     ClientId = "imagegalleryclient",
                     AllowedGrantTypes = GrantTypes.Hybrid,
+                    //IdentityTokenLifetime = // default 300 seconds
+                    //AuthorizationCodeLifetime = // default 300 seconds
+                    AccessTokenLifetime = 120,
+                    AllowOfflineAccess = true, // allows us to get new access_token + new refresh_token
+                                                // on behave of the user without asking the user to intervene with creds
+                    //AbsoluteRefreshTokenLifetime = // default 30 days
+                    UpdateAccessTokenClaimsOnRefresh = true, // updates claims if they've been changed.
                     RedirectUris = new List<string>()
                     {
                         "https://localhost:44301/signin-oidc" // tokens delivered to browser via redirection
